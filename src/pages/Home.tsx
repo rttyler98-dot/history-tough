@@ -1,10 +1,39 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Play, Info } from 'lucide-react';
-import { mockCategories, mockStories } from '../data/mockData';
+import { Play, Info, Loader2 } from 'lucide-react';
+import type { Category, Story } from '../types';
 
 export default function Home() {
   const navigate = useNavigate();
-  const featuredStory = mockStories[0];
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [featuredStory, setFeaturedStory] = useState<Story | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:3001/api/categories')
+      .then(res => res.json())
+      .then(data => {
+        setCategories(data);
+        if (data[0]?.stories?.length > 0) {
+          setFeaturedStory(data[0].stories[0]);
+        }
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to fetch data:', err);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <Loader2 className="animate-spin text-red-600" size={48} />
+      </div>
+    );
+  }
+
+  if (!featuredStory) return null;
 
   return (
     <div className="pb-20">
@@ -55,11 +84,11 @@ export default function Home() {
 
       {/* Categories */}
       <div className="px-4 md:px-12 -mt-12 relative z-10 space-y-12">
-        {mockCategories.map((category) => (
+        {categories.map((category: Category) => (
           <div key={category.id}>
             <h3 className="text-xl md:text-2xl font-bold mb-4">{category.title}</h3>
             <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
-              {category.stories.map((story) => (
+              {category.stories.map((story: Story) => (
                 <div
                   key={story.id}
                   onClick={() => navigate(`/story/${story.id}`)}

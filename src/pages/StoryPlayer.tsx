@@ -2,34 +2,141 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { X, PlayCircle, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { mockStories } from '../data/mockData';
-import type { Choice } from '../types';
+import type { Choice, Scene, Story } from '../types';
+import { audioManager } from '../lib/audio';
+import { Volume2, VolumeX, Loader2 } from 'lucide-react';
 
 export default function StoryPlayer() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const story = mockStories.find((s) => s.id === id);
+  const [story, setStory] = useState<Story | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const [currentSceneId, setCurrentSceneId] = useState(story?.scenes[0]?.id);
+  const [currentSceneId, setCurrentSceneId] = useState<string | undefined>();
   const [mode, setMode] = useState<'story' | 'scroll' | 'read'>('story');
   const [showPaywall, setShowPaywall] = useState(false);
+  const [isMuted, setIsMuted] = useState(true);
+
+  const [scenePath, setScenePath] = useState<Scene[]>([]);
+
+  useEffect(() => {
+    fetch(`http://localhost:3001/api/stories/${id}`)
+      .then(res => res.json())
+      .then(data => {
+        setStory(data);
+        setCurrentSceneId(data.scenes[0]?.id);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error(err);
+        setLoading(false);
+      });
+  }, [id]);
+
+  useEffect(() => {
+    if (!story) return;
+
+    const buildPath = () => {
+       const path: Scene[] = [];
+       let current: Scene | undefined = story.scenes[0];
+       // Build linear path up to the first choice or end
+       while (current) {
+         path.push(current);
+         if (current.choices && current.choices.length > 0) {
+           break; // Stop at choice
+         }
+         if (current.isEnding) break;
+
+         // Assuming linear progress if no choices
+         const nextIndex = story.scenes.findIndex(s => s.id === current?.id) + 1;
+         if (nextIndex < story.scenes.length && !story.scenes[nextIndex].altHistoryText && !story.scenes[nextIndex-1]?.choices) {
+            current = story.scenes[nextIndex];
+         } else {
+             // In complex branching, this needs a proper tree traversal.
+             // For this MVP, if we hit scenes that are targets of choices, we don't auto-append them.
+             break;
+         }
+       }
+       return path;
+    };
+
+    // Only rebuild path if it's completely empty (initial load)
+    if (scenePath.length === 0) {
+        setScenePath(buildPath());
+    }
+  }, [story, scenePath.length]);
+
+  useEffect(() => {
+    if (!isMuted) {
+      audioManager.playBg();
+    } else {
+      audioManager.stopBg();
+    }
+
+    return () => {
+      audioManager.stopBg(); // Cleanup on unmount
+    };
+  }, [isMuted]);
 
   useEffect(() => {
     if (story) {
       const scene = story.scenes.find((s) => s.id === currentSceneId);
       if (scene?.isCliffhanger) {
         // Show paywall after a short dramatic pause
-        const timer = setTimeout(() => setShowPaywall(true), 1500);
+        const timer = setTimeout(() => {
+           setShowPaywall(true);
+           if (!isMuted) audioManager.playDramaticHit();
+        }, 1500);
         return () => clearTimeout(timer);
       }
     }
-  }, [currentSceneId, story]);
+  }, [currentSceneId, story, isMuted]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-zinc-950">
+        <Loader2 className="animate-spin text-red-600" size={48} />
+      </div>
+    );
+  }
 
   if (!story) {
-    return <div className="p-8 text-center">Story not found.</div>;
+    return <div className="p-8 text-center text-white">Story not found.</div>;
   }
 
   const currentScene = story.scenes.find((s) => s.id === currentSceneId) || story.scenes[0];
+
+  const handleReadScrollChoice = (choice: Choice) => {
+    if (!isMuted) audioManager.playClick();
+    const nextScene = story.scenes.find(s => s.id === choice.nextSceneId);
+    if (nextScene) {
+      // Append the chosen scene and subsequent linear scenes to the path
+      let current: Scene | undefined = nextScene;
+      const newPathAdditions: Scene[] = [];
+
+      while (current) {
+        newPathAdditions.push(current);
+        if (current.choices && current.choices.length > 0) break;
+        if (current.isEnding) break;
+
+        const nextIndex = story.scenes.findIndex(s => s.id === current?.id) + 1;
+        // Basic check to not auto-append if the next scene is an alternate branch target we shouldn't hit linearly
+        if (nextIndex < story.scenes.length) {
+            current = story.scenes[nextIndex];
+        } else {
+            break;
+        }
+      }
+      setScenePath(prev => [...prev, ...newPathAdditions]);
+      setCurrentSceneId(choice.nextSceneId); // Update current scene ID for paywall logic
+
+      // Auto scroll logic could go here, but React needs to render first
+      setTimeout(() => {
+         const element = document.getElementById(`scene-${choice.nextSceneId}`);
+         element?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
 
   const handleNext = () => {
     if (showPaywall) return;
@@ -58,8 +165,11 @@ export default function StoryPlayer() {
   };
 
   const handleChoice = (choice: Choice) => {
+    if (!isMuted) audioManager.playClick();
     setCurrentSceneId(choice.nextSceneId);
   };
+
+  const toggleMute = () => setIsMuted(!isMuted);
 
   if (mode === 'story') {
     return (
@@ -82,7 +192,10 @@ export default function StoryPlayer() {
         </div>
 
         {/* Top Controls */}
-        <div className="absolute top-8 right-4 z-50 flex gap-4">
+        <div className="absolute top-8 right-4 z-50 flex gap-4 items-center">
+          <button onClick={toggleMute} className="p-2 bg-black/50 rounded-full hover:bg-black/70 text-white">
+             {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
           <button onClick={() => setMode('scroll')} className="px-4 py-2 bg-black/50 rounded-full hover:bg-black/70 text-sm font-medium">
             Scroll Mode
           </button>
@@ -193,22 +306,50 @@ export default function StoryPlayer() {
               Scroll Mode
             </button>
            </div>
-          <button onClick={() => navigate('/')} className="p-2 bg-amber-900/10 rounded-full hover:bg-amber-900/20">
-            <X size={24} />
-          </button>
+           <div className="flex gap-4 items-center">
+             <button onClick={toggleMute} className="p-2 bg-amber-900/10 rounded-full hover:bg-amber-900/20 text-amber-900">
+               {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+             </button>
+             <button onClick={() => navigate('/')} className="p-2 bg-amber-900/10 rounded-full hover:bg-amber-900/20">
+               <X size={24} />
+             </button>
+           </div>
         </div>
 
         <div className="max-w-3xl mx-auto p-6 md:p-12">
-          <h1 className="text-4xl md:text-6xl font-serif font-bold text-amber-950 mb-4">{story.title}</h1>
-          <p className="text-xl text-amber-900/70 mb-12 italic">{story.description}</p>
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-6xl font-serif font-bold text-amber-950 mb-4"
+          >
+            {story.title}
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-xl text-amber-900/70 mb-12 italic"
+          >
+            {story.description}
+          </motion.p>
 
           <div className="space-y-16">
-            {story.scenes.map((scene, i) => (
-              <div key={scene.id} className="prose prose-amber lg:prose-xl mx-auto">
-                <img
+            {scenePath.map((scene, i) => (
+              <motion.div
+                key={`${scene.id}-${i}`}
+                id={`scene-${scene.id}`}
+                className="prose prose-amber lg:prose-xl mx-auto"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true, margin: "-100px" }}
+                transition={{ duration: 0.6 }}
+              >
+                <motion.img
                   src={scene.imageUrl}
                   alt="Historical depiction"
                   className="w-full rounded-2xl shadow-xl mb-8 object-cover aspect-video"
+                  whileHover={{ scale: 1.02 }}
+                  transition={{ type: "spring", stiffness: 300 }}
                 />
 
                 {scene.altHistoryText && (
@@ -222,13 +363,14 @@ export default function StoryPlayer() {
                   {i === 0 ? scene.text.slice(1) : scene.text}
                 </p>
 
-                {scene.choices && (
+                {scene.choices && i === scenePath.length - 1 && (
                    <div className="mt-12 p-8 bg-amber-900/5 rounded-2xl border border-amber-900/10">
                      <h3 className="text-xl font-bold text-amber-950 mb-6 text-center">What happens next?</h3>
                      <div className="flex flex-col gap-4">
                        {scene.choices.map((choice) => (
                          <button
                            key={choice.id}
+                           onClick={() => handleReadScrollChoice(choice)}
                            className="w-full p-4 bg-white shadow-sm border border-amber-900/10 rounded-xl hover:bg-amber-50 transition-colors text-amber-950 font-medium"
                          >
                            {choice.text}
@@ -237,7 +379,7 @@ export default function StoryPlayer() {
                      </div>
                    </div>
                 )}
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -267,7 +409,10 @@ export default function StoryPlayer() {
   if (mode === 'scroll') {
     return (
       <div className="bg-black text-white h-[100dvh] w-full overflow-y-auto snap-y snap-mandatory relative">
-        <div className="fixed top-8 right-4 z-50 flex gap-4">
+        <div className="fixed top-8 right-4 z-50 flex gap-4 items-center">
+          <button onClick={toggleMute} className="p-2 bg-black/50 rounded-full hover:bg-black/70 text-white">
+             {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+          </button>
           <button onClick={() => setMode('story')} className="px-4 py-2 bg-black/50 rounded-full hover:bg-black/70 text-sm font-medium">
             Story Mode
           </button>
@@ -279,47 +424,68 @@ export default function StoryPlayer() {
           </button>
         </div>
 
-        {story.scenes.map((scene) => (
-          <div key={scene.id} className="h-[100dvh] w-full snap-start relative flex items-center justify-center">
-             <div className="absolute inset-0">
+        {scenePath.map((scene, i) => (
+          <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
+             <motion.div
+                className="absolute inset-0"
+                initial={{ scale: 1.1 }}
+                whileInView={{ scale: 1 }}
+                transition={{ duration: 1.5 }}
+             >
               <img
                 src={scene.imageUrl}
                 alt="Scene background"
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-            </div>
+            </motion.div>
 
-            <div className="relative z-10 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center">
+            <motion.div
+               className="relative z-10 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center"
+               initial={{ y: 50, opacity: 0 }}
+               whileInView={{ y: 0, opacity: 1 }}
+               transition={{ duration: 0.8, delay: 0.2 }}
+            >
                {scene.altHistoryText && (
-                  <span className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 self-center">
+                  <motion.span
+                    initial={{ scale: 0.8 }}
+                    animate={{ scale: [0.8, 1.1, 1] }}
+                    transition={{ duration: 0.4 }}
+                    className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 self-center"
+                  >
                     {scene.altHistoryText}
-                  </span>
+                  </motion.span>
                 )}
                 <p className="text-2xl md:text-4xl font-serif text-white drop-shadow-lg leading-snug">
                   {scene.text}
                 </p>
 
-                {scene.choices && (
-                  <div className="mt-8 flex flex-col gap-4">
+                {scene.choices && i === scenePath.length - 1 && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 1 }}
+                    className="mt-8 flex flex-col gap-4"
+                  >
                     {scene.choices.map((choice) => (
                       <button
                         key={choice.id}
                         onClick={() => {
-                            // In scroll mode, making a choice could just scroll to the next scene or filter scenes.
-                            // For MVP we just alert as scroll mode implies linear viewing usually, but let's navigate to it by ID.
-                            const element = document.getElementById(`scroll-scene-${choice.nextSceneId}`);
-                            element?.scrollIntoView({ behavior: 'smooth' });
+                            handleReadScrollChoice(choice);
+                            setTimeout(() => {
+                                const element = document.getElementById(`scroll-scene-${choice.nextSceneId}`);
+                                element?.scrollIntoView({ behavior: 'smooth' });
+                            }, 100);
                         }}
                         className="w-full p-4 bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 rounded-xl hover:bg-zinc-800 transition-colors"
                       >
                         <p className="text-lg">{choice.text}</p>
                       </button>
                     ))}
-                  </div>
+                  </motion.div>
                 )}
-            </div>
-            <div id={`scroll-scene-${scene.id}`} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
+            </motion.div>
+            <div id={`scene-${scene.id}`} className="absolute top-0 left-0 w-full h-full pointer-events-none" />
           </div>
         ))}
 
