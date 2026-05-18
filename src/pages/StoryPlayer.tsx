@@ -211,24 +211,29 @@ export default function StoryPlayer() {
         <AnimatePresence mode="wait">
           <motion.div
             key={currentScene.id}
-            initial={{ opacity: 0, scale: 1.05 }}
-            animate={{ opacity: 1, scale: 1 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.5 }}
-            className="absolute inset-0"
+            transition={{ duration: 0.8 }}
+            className="absolute inset-0 overflow-hidden"
           >
             {/* Click zones for navigation */}
             <div className="absolute inset-0 z-40 flex pointer-events-none">
               <div className="w-1/3 h-full cursor-pointer pointer-events-auto" onClick={handlePrev} />
               <div className="w-2/3 h-full cursor-pointer pointer-events-auto" onClick={handleNext} />
             </div>
+
             <div className="absolute inset-0">
-              <img
+              <motion.img
                 src={currentScene.imageUrl}
                 alt="Scene background"
-                className="w-full h-full object-cover"
+                className="w-full h-full object-cover origin-center"
+                initial={{ scale: 1.05 }}
+                animate={{ scale: 1.2, x: [0, -10, 10, 0], y: [0, 10, -10, 0] }}
+                transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+              <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
             <div className="absolute inset-0 z-50 flex flex-col justify-end p-6 pb-24 md:p-12 pointer-events-none">
@@ -426,19 +431,18 @@ export default function StoryPlayer() {
 
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
-             <motion.div
-                className="absolute inset-0"
-                initial={{ scale: 1.1 }}
-                whileInView={{ scale: 1 }}
-                transition={{ duration: 1.5 }}
-             >
-              <img
-                src={scene.imageUrl}
-                alt="Scene background"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
-            </motion.div>
+             <div className="absolute inset-0 overflow-hidden">
+               <motion.img
+                  src={scene.imageUrl}
+                  alt="Scene background"
+                  className="w-full h-full object-cover origin-center"
+                  initial={{ scale: 1 }}
+                  whileInView={{ scale: 1.15, x: [-5, 5, -5], y: [-5, 5, -5] }}
+                  transition={{ duration: 40, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
+               />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+              <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
+            </div>
 
             <motion.div
                className="relative z-10 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center"

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
 import StoryPlayer from './pages/StoryPlayer';
+import './components/Particles.css';
 
 function App() {
   return (
