@@ -11,6 +11,8 @@ export interface Scene {
   id: string;
   text: string;
   imageUrl: string;
+  characterUrl?: string;
+  animationType?: 'bob' | 'shake' | 'slide-in' | 'spin' | 'pulse';
   isCliffhanger?: boolean;
   choices?: Choice[];
   altHistoryText?: string;

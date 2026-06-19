@@ -62,6 +62,7 @@ export default function StoryPlayer() {
 
     // Only rebuild path if it's completely empty (initial load)
     if (scenePath.length === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setScenePath(buildPath());
     }
   }, [story, scenePath.length]);
@@ -235,6 +236,38 @@ export default function StoryPlayer() {
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
+
+            {/* Character Animation Overlay */}
+            {currentScene.characterUrl && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+                <motion.img
+                  src={currentScene.characterUrl}
+                  alt="Character"
+                  className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                  initial={
+                    currentScene.animationType === 'slide-in' ? { x: -300, opacity: 0 } :
+                    currentScene.animationType === 'spin' ? { rotate: -180, scale: 0 } :
+                    { opacity: 0 }
+                  }
+                  animate={
+                    currentScene.animationType === 'bob' ? { y: [0, -15, 0], opacity: 1 } :
+                    currentScene.animationType === 'shake' ? { x: [-5, 5, -5, 5, 0], opacity: 1 } :
+                    currentScene.animationType === 'slide-in' ? { x: 0, opacity: 1 } :
+                    currentScene.animationType === 'spin' ? { rotate: 0, scale: 1, opacity: 1 } :
+                    currentScene.animationType === 'pulse' ? { scale: [1, 1.1, 1], opacity: 1 } :
+                    { opacity: 1 }
+                  }
+                  transition={
+                    currentScene.animationType === 'bob' ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } :
+                    currentScene.animationType === 'shake' ? { duration: 0.4, repeat: Infinity } :
+                    currentScene.animationType === 'slide-in' ? { duration: 0.8, type: 'spring', bounce: 0.4 } :
+                    currentScene.animationType === 'spin' ? { duration: 0.6, type: 'spring' } :
+                    currentScene.animationType === 'pulse' ? { duration: 1, repeat: Infinity } :
+                    { duration: 0.5 }
+                  }
+                />
+              </div>
+            )}
 
             <div className="absolute inset-0 z-50 flex flex-col justify-end p-6 pb-24 md:p-12 pointer-events-none">
               <motion.div
@@ -444,8 +477,40 @@ export default function StoryPlayer() {
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
+            {/* Character Animation Overlay for Scroll Mode */}
+            {scene.characterUrl && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <motion.img
+                  src={scene.characterUrl}
+                  alt="Character"
+                  className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                  initial={
+                    scene.animationType === 'slide-in' ? { x: -300, opacity: 0 } :
+                    scene.animationType === 'spin' ? { rotate: -180, scale: 0 } :
+                    { opacity: 0 }
+                  }
+                  whileInView={
+                    scene.animationType === 'bob' ? { y: [0, -15, 0], opacity: 1 } :
+                    scene.animationType === 'shake' ? { x: [-5, 5, -5, 5, 0], opacity: 1 } :
+                    scene.animationType === 'slide-in' ? { x: 0, opacity: 1 } :
+                    scene.animationType === 'spin' ? { rotate: 0, scale: 1, opacity: 1 } :
+                    scene.animationType === 'pulse' ? { scale: [1, 1.1, 1], opacity: 1 } :
+                    { opacity: 1 }
+                  }
+                  transition={
+                    scene.animationType === 'bob' ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } :
+                    scene.animationType === 'shake' ? { duration: 0.4, repeat: Infinity } :
+                    scene.animationType === 'slide-in' ? { duration: 0.8, type: 'spring', bounce: 0.4 } :
+                    scene.animationType === 'spin' ? { duration: 0.6, type: 'spring' } :
+                    scene.animationType === 'pulse' ? { duration: 1, repeat: Infinity } :
+                    { duration: 0.5 }
+                  }
+                />
+              </div>
+            )}
+
             <motion.div
-               className="relative z-10 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center"
+               className="relative z-30 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center pointer-events-none"
                initial={{ y: 50, opacity: 0 }}
                whileInView={{ y: 0, opacity: 1 }}
                transition={{ duration: 0.8, delay: 0.2 }}
@@ -455,7 +520,7 @@ export default function StoryPlayer() {
                     initial={{ scale: 0.8 }}
                     animate={{ scale: [0.8, 1.1, 1] }}
                     transition={{ duration: 0.4 }}
-                    className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 self-center"
+                    className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 self-center pointer-events-auto"
                   >
                     {scene.altHistoryText}
                   </motion.span>
@@ -469,7 +534,7 @@ export default function StoryPlayer() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
-                    className="mt-8 flex flex-col gap-4"
+                    className="mt-8 flex flex-col gap-4 pointer-events-auto"
                   >
                     {scene.choices.map((choice) => (
                       <button
