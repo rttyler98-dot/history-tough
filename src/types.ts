@@ -12,6 +12,7 @@ export interface Scene {
   text: string;
   imageUrl: string;
   characterUrl?: string;
+  lottieUrl?: string;
   animationType?: 'bob' | 'shake' | 'slide-in' | 'spin' | 'pulse';
   isCliffhanger?: boolean;
   choices?: Choice[];

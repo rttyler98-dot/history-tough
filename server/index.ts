@@ -55,7 +55,7 @@ const db = {
         },
         {
           id: 'scene-4-historical',
-          text: 'Blades flash. Even Brutus, your trusted friend, strikes. "Et tu, Brute?" You cover your face with your toga and fall.',
+          text: 'Blades flash. Even Brutus, your trusted friend, strikes. "Et tu, Brute?" You cover face with your toga and fall.',
           imageUrl: 'https://images.unsplash.com/photo-1605330384877-03306ce08eeb?auto=format&fit=crop&q=80&w=1080&h=1920',
           characterUrl: '/brutus.svg',
           animationType: 'pulse',

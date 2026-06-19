@@ -5,6 +5,29 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Choice, Scene, Story } from '../types';
 import { audioManager } from '../lib/audio';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+import Lottie from 'lottie-react';
+
+function LottiePlayer({ url }: { url: string }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [animationData, setAnimationData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => setAnimationData(data))
+      .catch((err) => console.error("Failed to load lottie", err));
+  }, [url]);
+
+  if (!animationData) return null;
+
+  return (
+    <Lottie
+      animationData={animationData}
+      loop={true}
+      className="w-64 h-64 md:w-96 md:h-96"
+    />
+  );
+}
 
 export default function StoryPlayer() {
   const { id } = useParams();
@@ -238,7 +261,11 @@ export default function StoryPlayer() {
             </div>
 
             {/* Character Animation Overlay */}
-            {currentScene.characterUrl && (
+            {currentScene.lottieUrl ? (
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+                  <LottiePlayer url={currentScene.lottieUrl} />
+               </div>
+            ) : currentScene.characterUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
                 <motion.img
                   src={currentScene.characterUrl}
@@ -478,7 +505,11 @@ export default function StoryPlayer() {
             </div>
 
             {/* Character Animation Overlay for Scroll Mode */}
-            {scene.characterUrl && (
+            {scene.lottieUrl ? (
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                  <LottiePlayer url={scene.lottieUrl} />
+               </div>
+            ) : scene.characterUrl && (
               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
                 <motion.img
                   src={scene.characterUrl}
