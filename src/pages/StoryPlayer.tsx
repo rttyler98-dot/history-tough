@@ -36,6 +36,7 @@ export default function StoryPlayer() {
   const [loading, setLoading] = useState(true);
 
   const [currentSceneId, setCurrentSceneId] = useState<string | undefined>();
+  const [direction, setDirection] = useState<number>(0);
   const [mode, setMode] = useState<'story' | 'scroll' | 'read'>('story');
   const [showPaywall, setShowPaywall] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -175,6 +176,7 @@ export default function StoryPlayer() {
 
     const nextIndex = story.scenes.findIndex(s => s.id === currentSceneId) + 1;
     if (nextIndex < story.scenes.length) {
+      setDirection(1);
       setCurrentSceneId(story.scenes[nextIndex].id);
     }
   };
@@ -184,12 +186,14 @@ export default function StoryPlayer() {
 
     const prevIndex = story.scenes.findIndex(s => s.id === currentSceneId) - 1;
     if (prevIndex >= 0) {
+      setDirection(-1);
       setCurrentSceneId(story.scenes[prevIndex].id);
     }
   };
 
   const handleChoice = (choice: Choice) => {
     if (!isMuted) audioManager.playClick();
+    setDirection(1);
     setCurrentSceneId(choice.nextSceneId);
   };
 
@@ -232,14 +236,34 @@ export default function StoryPlayer() {
         </div>
 
         {/* Scene Content */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
             key={currentScene.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 overflow-hidden"
+            custom={direction}
+            variants={{
+              enter: (dir: number) => ({
+                x: dir > 0 ? 1000 : -1000,
+                opacity: 0
+              }),
+              center: {
+                zIndex: 1,
+                x: 0,
+                opacity: 1
+              },
+              exit: (dir: number) => ({
+                zIndex: 0,
+                x: dir < 0 ? 1000 : -1000,
+                opacity: 0
+              })
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            className="absolute inset-0 overflow-hidden bg-black"
           >
             {/* Click zones for navigation */}
             <div className="absolute inset-0 z-40 flex pointer-events-none">
@@ -256,7 +280,7 @@ export default function StoryPlayer() {
                 animate={{ scale: 1.2, x: [0, -10, 10, 0], y: [0, 10, -10, 0] }}
                 transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/40 to-transparent" />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
@@ -500,7 +524,7 @@ export default function StoryPlayer() {
                   whileInView={{ scale: 1.15, x: [-5, 5, -5], y: [-5, 5, -5] }}
                   transition={{ duration: 40, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
                />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/40 to-transparent" />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
