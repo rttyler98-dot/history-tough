@@ -272,15 +272,7 @@ export default function StoryPlayer() {
             </div>
 
             <div className="absolute inset-0">
-              <motion.img
-                src={currentScene.imageUrl}
-                alt="Scene background"
-                className="w-full h-full object-cover origin-center"
-                initial={{ scale: 1.05 }}
-                animate={{ scale: 1.2, x: [0, -10, 10, 0], y: [0, 10, -10, 0] }}
-                transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/40 to-transparent" />
+              <div className={`absolute inset-0 bg-[length:200%_200%] animate-bg-pan ${currentScene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'}`} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
@@ -433,13 +425,33 @@ export default function StoryPlayer() {
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.6 }}
               >
-                <motion.img
-                  src={scene.imageUrl}
-                  alt="Historical depiction"
-                  className="w-full rounded-2xl shadow-xl mb-8 object-cover aspect-video"
+                <motion.div
+                  className={`w-full rounded-2xl shadow-xl mb-8 aspect-video overflow-hidden relative bg-[length:200%_200%] animate-bg-pan ${scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'}`}
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300 }}
-                />
+                >
+                  {scene.characterUrl && !scene.lottieUrl && (
+                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                       <motion.img
+                         src={scene.characterUrl}
+                         alt="Character"
+                         className="w-1/2 h-1/2 object-contain"
+                         animate={
+                           scene.animationType === 'bob' ? { y: [0, -10, 0] } :
+                           scene.animationType === 'shake' ? { x: [-3, 3, -3, 3, 0] } :
+                           scene.animationType === 'pulse' ? { scale: [1, 1.05, 1] } :
+                           {}
+                         }
+                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                       />
+                     </div>
+                  )}
+                  {scene.lottieUrl && (
+                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 scale-[0.6]">
+                        <LottiePlayer url={scene.lottieUrl} />
+                     </div>
+                  )}
+                </motion.div>
 
                 {scene.altHistoryText && (
                   <span className="inline-block bg-purple-100 text-purple-900 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-purple-200">
@@ -516,15 +528,7 @@ export default function StoryPlayer() {
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
              <div className="absolute inset-0 overflow-hidden">
-               <motion.img
-                  src={scene.imageUrl}
-                  alt="Scene background"
-                  className="w-full h-full object-cover origin-center"
-                  initial={{ scale: 1 }}
-                  whileInView={{ scale: 1.15, x: [-5, 5, -5], y: [-5, 5, -5] }}
-                  transition={{ duration: 40, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-               />
-              <div className="absolute inset-0 bg-gradient-to-t from-zinc-900/90 via-zinc-900/40 to-transparent" />
+              <div className={`absolute inset-0 bg-[length:200%_200%] animate-bg-pan ${scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'}`} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
