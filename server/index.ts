@@ -23,7 +23,8 @@ const db = {
           imageUrl: 'https://images.unsplash.com/photo-1622359487965-da255b719ee2?auto=format&fit=crop&q=80&w=1080&h=1920',
           bgClass: 'bg-gradient-to-br from-amber-200 via-orange-300 to-amber-500',
           characterUrl: '/caesar.svg',
-          animationType: 'bob'
+          animationType: 'bob',
+          locationType: 'city'
         },
         {
           id: 'scene-2',
@@ -32,6 +33,7 @@ const db = {
           bgClass: 'bg-gradient-to-tl from-indigo-900 via-purple-900 to-zinc-900',
           characterUrl: '/calpurnia.svg',
           animationType: 'shake',
+          locationType: 'indoor',
           choices: [
             {
               id: 'go-senate',
@@ -54,6 +56,7 @@ const db = {
           bgClass: 'bg-gradient-to-tr from-stone-400 via-neutral-300 to-stone-500',
           characterUrl: '/senator.svg',
           animationType: 'slide-in',
+          locationType: 'indoor',
           isCliffhanger: true,
         },
         {
@@ -63,6 +66,7 @@ const db = {
           bgClass: 'bg-gradient-to-br from-red-900 via-red-700 to-black',
           characterUrl: '/brutus.svg',
           animationType: 'pulse',
+          locationType: 'indoor',
           isEnding: true,
         },
         {
@@ -73,6 +77,7 @@ const db = {
           bgClass: 'bg-gradient-to-bl from-teal-900 via-emerald-800 to-stone-900',
           characterUrl: '/senator.svg',
           animationType: 'spin',
+          locationType: 'village',
           isEnding: true,
         }
       ]

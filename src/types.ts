@@ -15,6 +15,7 @@ export interface Scene {
   characterUrl?: string;
   lottieUrl?: string;
   animationType?: 'bob' | 'shake' | 'slide-in' | 'spin' | 'pulse';
+  locationType?: 'city' | 'village' | 'indoor' | 'nature';
   isCliffhanger?: boolean;
   choices?: Choice[];
   altHistoryText?: string;

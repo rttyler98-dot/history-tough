@@ -7,12 +7,12 @@ import { audioManager } from '../lib/audio';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
 import Lottie from 'lottie-react';
 
-const SimpleHistoryBackground = ({ bgClass }: { bgClass?: string }) => {
+const SimpleHistoryBackground = ({ bgClass, locationType }: { bgClass?: string, locationType?: 'city' | 'village' | 'indoor' | 'nature' }) => {
   // Extract primary color theme to determine scene elements
   const isNight = bgClass?.includes('indigo') || bgClass?.includes('slate');
   const isSunset = bgClass?.includes('amber') || bgClass?.includes('orange');
   const isBlood = bgClass?.includes('red');
-  const isIndoor = bgClass?.includes('stone') || bgClass?.includes('neutral');
+  const isIndoor = locationType === 'indoor' || bgClass?.includes('stone') || bgClass?.includes('neutral');
 
   return (
     <div className={`absolute inset-0 overflow-hidden ${bgClass || 'bg-blue-300'}`}>
@@ -42,12 +42,41 @@ const SimpleHistoryBackground = ({ bgClass }: { bgClass?: string }) => {
         </>
       )}
 
-      {/* Landscape/Hills or Indoor Pillars */}
+      {/* Landscape/Hills, Indoor Pillars, City Skyline, or Village */}
       {isIndoor ? (
         <div className="absolute bottom-0 w-full h-full flex justify-around items-end opacity-40">
            {[...Array(4)].map((_, i) => (
              <div key={i} className="w-16 h-3/4 bg-zinc-800 border-x-4 border-zinc-900 rounded-t-sm" />
            ))}
+        </div>
+      ) : locationType === 'city' ? (
+        <div className="absolute bottom-0 w-full h-1/2 flex items-end opacity-60">
+           {[...Array(12)].map((_, i) => {
+               const height = 30 + ((i * 17) % 50);
+               return (
+                   <div key={i} className={`flex-1 bg-zinc-800 border-x border-zinc-900`} style={{ height: `${height}%` }} />
+               )
+           })}
+        </div>
+      ) : locationType === 'village' ? (
+        <div className="absolute bottom-0 w-full h-1/3 flex justify-around items-end opacity-70">
+           {[...Array(5)].map((_, i) => {
+               const height = 40 + ((i * 13) % 40);
+               return (
+                   <div key={i} className="relative w-24 flex flex-col items-center" style={{ height: `${height}%` }}>
+                       {/* Roof */}
+                       <div className="w-0 h-0 border-l-[48px] border-l-transparent border-r-[48px] border-r-transparent border-b-[40px] border-b-amber-800" />
+                       {/* House body */}
+                       <div className="w-20 h-full bg-amber-100 flex justify-center items-end pb-2">
+                           {/* Door */}
+                           <div className="w-6 h-10 bg-amber-900 rounded-t-sm" />
+                       </div>
+                   </div>
+               )
+           })}
+           <motion.div
+             className={`absolute -bottom-10 -left-10 w-[120%] h-1/3 rounded-t-[50%] ${isBlood ? 'bg-red-950' : isNight ? 'bg-indigo-950' : 'bg-emerald-700'} -z-10`}
+           />
         </div>
       ) : (
         <>
@@ -328,7 +357,7 @@ export default function StoryPlayer() {
             </div>
 
             <div className="absolute inset-0">
-              <SimpleHistoryBackground bgClass={currentScene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} />
+              <SimpleHistoryBackground bgClass={currentScene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} locationType={currentScene.locationType} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
@@ -584,7 +613,7 @@ export default function StoryPlayer() {
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
              <div className="absolute inset-0 overflow-hidden">
-              <SimpleHistoryBackground bgClass={scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} />
+              <SimpleHistoryBackground bgClass={scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} locationType={scene.locationType} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
