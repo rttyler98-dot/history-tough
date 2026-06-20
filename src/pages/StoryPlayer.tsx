@@ -7,6 +7,62 @@ import { audioManager } from '../lib/audio';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
 import Lottie from 'lottie-react';
 
+const SimpleHistoryBackground = ({ bgClass }: { bgClass?: string }) => {
+  // Extract primary color theme to determine scene elements
+  const isNight = bgClass?.includes('indigo') || bgClass?.includes('slate');
+  const isSunset = bgClass?.includes('amber') || bgClass?.includes('orange');
+  const isBlood = bgClass?.includes('red');
+  const isIndoor = bgClass?.includes('stone') || bgClass?.includes('neutral');
+
+  return (
+    <div className={`absolute inset-0 overflow-hidden ${bgClass || 'bg-blue-300'}`}>
+      {/* Sky elements */}
+      {!isIndoor && (
+        <>
+          <motion.div
+            className={`absolute rounded-full ${isNight ? 'bg-zinc-100 w-24 h-24 right-1/4' : 'bg-yellow-300 w-32 h-32 right-1/3'}`}
+            initial={{ top: '60%', opacity: 0 }}
+            animate={{ top: isNight ? '15%' : isSunset ? '40%' : '10%', opacity: 1 }}
+            transition={{ duration: 2, ease: "easeOut" }}
+          />
+          {/* Clouds */}
+          <motion.div
+            className="absolute top-20 flex gap-4 opacity-50"
+            animate={{ x: [0, -1000] }}
+            transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+          >
+            {[...Array(5)].map((_, i) => {
+              // Deterministic width based on index instead of Math.random
+              const width = 100 + ((i * 37) % 100);
+              return (
+                <div key={i} className={`bg-white rounded-full ${isNight ? 'opacity-20' : 'opacity-80'}`} style={{ width, height: 40, marginLeft: 200 * i, marginTop: (i%3)*20 }} />
+              );
+            })}
+          </motion.div>
+        </>
+      )}
+
+      {/* Landscape/Hills or Indoor Pillars */}
+      {isIndoor ? (
+        <div className="absolute bottom-0 w-full h-full flex justify-around items-end opacity-40">
+           {[...Array(4)].map((_, i) => (
+             <div key={i} className="w-16 h-3/4 bg-zinc-800 border-x-4 border-zinc-900 rounded-t-sm" />
+           ))}
+        </div>
+      ) : (
+        <>
+          <motion.div
+            className={`absolute -bottom-10 -left-10 w-[120%] h-1/3 rounded-t-[50%] ${isBlood ? 'bg-red-950' : isNight ? 'bg-indigo-950' : 'bg-emerald-700'}`}
+          />
+          <motion.div
+            className={`absolute -bottom-20 -right-10 w-[120%] h-1/2 rounded-t-[50%] ${isBlood ? 'bg-red-900' : isNight ? 'bg-indigo-900' : 'bg-emerald-600'} opacity-80`}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
 function LottiePlayer({ url }: { url: string }) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [animationData, setAnimationData] = useState<any>(null);
@@ -272,7 +328,7 @@ export default function StoryPlayer() {
             </div>
 
             <div className="absolute inset-0">
-              <div className={`absolute inset-0 bg-[length:200%_200%] animate-bg-pan ${currentScene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'}`} />
+              <SimpleHistoryBackground bgClass={currentScene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
@@ -528,7 +584,7 @@ export default function StoryPlayer() {
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
              <div className="absolute inset-0 overflow-hidden">
-              <div className={`absolute inset-0 bg-[length:200%_200%] animate-bg-pan ${scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'}`} />
+              <SimpleHistoryBackground bgClass={scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
