@@ -2,9 +2,13 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { X, PlayCircle, Lock } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Lottie from 'lottie-react';
 import type { Choice, Scene, Story } from '../types';
 import { audioManager } from '../lib/audio';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+
+import historyPlaceholderLottie from '../../public/lottie/history-placeholder.json';
+import historyBg1Lottie from '../../public/lottie/history-background-1.json';
 
 export default function StoryPlayer() {
   const { id } = useParams();
@@ -25,6 +29,25 @@ export default function StoryPlayer() {
       .then(data => {
         setStory(data);
         setCurrentSceneId(data.scenes[0]?.id);
+
+        // Build initial path
+        const path: Scene[] = [];
+        let current: Scene | undefined = data.scenes[0];
+
+        while (current) {
+          path.push(current);
+          if (current.choices && current.choices.length > 0) break;
+          if (current.isEnding) break;
+
+          const nextIndex = data.scenes.findIndex((s: Scene) => s.id === current?.id) + 1;
+          if (nextIndex < data.scenes.length && !data.scenes[nextIndex].altHistoryText && !data.scenes[nextIndex-1]?.choices) {
+              current = data.scenes[nextIndex];
+          } else {
+              break;
+          }
+        }
+        setScenePath(path);
+
         setLoading(false);
       })
       .catch(err => {
@@ -32,39 +55,6 @@ export default function StoryPlayer() {
         setLoading(false);
       });
   }, [id]);
-
-  useEffect(() => {
-    if (!story) return;
-
-    const buildPath = () => {
-       const path: Scene[] = [];
-       let current: Scene | undefined = story.scenes[0];
-       // Build linear path up to the first choice or end
-       while (current) {
-         path.push(current);
-         if (current.choices && current.choices.length > 0) {
-           break; // Stop at choice
-         }
-         if (current.isEnding) break;
-
-         // Assuming linear progress if no choices
-         const nextIndex = story.scenes.findIndex(s => s.id === current?.id) + 1;
-         if (nextIndex < story.scenes.length && !story.scenes[nextIndex].altHistoryText && !story.scenes[nextIndex-1]?.choices) {
-            current = story.scenes[nextIndex];
-         } else {
-             // In complex branching, this needs a proper tree traversal.
-             // For this MVP, if we hit scenes that are targets of choices, we don't auto-append them.
-             break;
-         }
-       }
-       return path;
-    };
-
-    // Only rebuild path if it's completely empty (initial load)
-    if (scenePath.length === 0) {
-        setScenePath(buildPath());
-    }
-  }, [story, scenePath.length]);
 
   useEffect(() => {
     if (!isMuted) {
@@ -223,15 +213,13 @@ export default function StoryPlayer() {
               <div className="w-2/3 h-full cursor-pointer pointer-events-auto" onClick={handleNext} />
             </div>
 
-            <div className="absolute inset-0">
-              <motion.img
-                src={currentScene.imageUrl}
-                alt="Scene background"
-                className="w-full h-full object-cover origin-center"
-                initial={{ scale: 1.05 }}
-                animate={{ scale: 1.2, x: [0, -10, 10, 0], y: [0, 10, -10, 0] }}
-                transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-              />
+            <div className="absolute inset-0 bg-black flex items-center justify-center">
+                <Lottie
+                   animationData={story.scenes.findIndex(s => s.id === currentSceneId) % 2 === 0 ? historyBg1Lottie : historyPlaceholderLottie}
+                   loop={true}
+                   className="absolute min-w-full min-h-full object-cover opacity-60"
+                   style={{ transform: 'scale(1.5)' }}
+                />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
@@ -343,46 +331,69 @@ export default function StoryPlayer() {
               <motion.div
                 key={`${scene.id}-${i}`}
                 id={`scene-${scene.id}`}
-                className="prose prose-amber lg:prose-xl mx-auto"
+                className="prose prose-amber lg:prose-xl mx-auto flex flex-col items-center"
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.6 }}
               >
-                <motion.img
-                  src={scene.imageUrl}
-                  alt="Historical depiction"
-                  className="w-full rounded-2xl shadow-xl mb-8 object-cover aspect-video"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                />
+                <div className="w-full rounded-2xl shadow-xl mb-8 overflow-hidden aspect-video bg-amber-950 flex items-center justify-center relative">
+                   <Lottie
+                     animationData={historyPlaceholderLottie}
+                     loop={true}
+                     className="absolute inset-0 w-full h-full object-cover opacity-80"
+                   />
+                   <motion.div
+                     className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"
+                     initial={{ opacity: 0 }}
+                     whileInView={{ opacity: 1 }}
+                     transition={{ duration: 1 }}
+                   />
+                </div>
 
                 {scene.altHistoryText && (
-                  <span className="inline-block bg-purple-100 text-purple-900 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-purple-200">
+                  <motion.span
+                    initial={{ scale: 0.9, opacity: 0 }}
+                    whileInView={{ scale: 1, opacity: 1 }}
+                    className="inline-block bg-purple-100 text-purple-900 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-purple-200"
+                  >
                     {scene.altHistoryText}
-                  </span>
+                  </motion.span>
                 )}
 
-                <p className="text-2xl font-serif leading-relaxed text-zinc-800">
-                  {i === 0 && <span className="float-left text-7xl font-serif pr-4 pt-2 text-amber-900">{scene.text.charAt(0)}</span>}
-                  {i === 0 ? scene.text.slice(1) : scene.text}
-                </p>
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2, duration: 0.6 }}
+                >
+                  <p className="text-2xl font-serif leading-relaxed text-zinc-800 text-center">
+                    {i === 0 && <span className="float-left text-7xl font-serif pr-4 pt-2 text-amber-900">{scene.text.charAt(0)}</span>}
+                    {i === 0 ? scene.text.slice(1) : scene.text}
+                  </p>
+                </motion.div>
 
                 {scene.choices && i === scenePath.length - 1 && (
-                   <div className="mt-12 p-8 bg-amber-900/5 rounded-2xl border border-amber-900/10">
+                   <motion.div
+                     initial={{ opacity: 0, scale: 0.95 }}
+                     whileInView={{ opacity: 1, scale: 1 }}
+                     transition={{ delay: 0.4, duration: 0.6 }}
+                     className="mt-12 p-8 w-full bg-amber-900/5 rounded-2xl border border-amber-900/10"
+                   >
                      <h3 className="text-xl font-bold text-amber-950 mb-6 text-center">What happens next?</h3>
                      <div className="flex flex-col gap-4">
                        {scene.choices.map((choice) => (
-                         <button
+                         <motion.button
                            key={choice.id}
+                           whileHover={{ scale: 1.02 }}
+                           whileTap={{ scale: 0.98 }}
                            onClick={() => handleReadScrollChoice(choice)}
                            className="w-full p-4 bg-white shadow-sm border border-amber-900/10 rounded-xl hover:bg-amber-50 transition-colors text-amber-950 font-medium"
                          >
                            {choice.text}
-                         </button>
+                         </motion.button>
                        ))}
                      </div>
-                   </div>
+                   </motion.div>
                 )}
               </motion.div>
             ))}
@@ -431,24 +442,22 @@ export default function StoryPlayer() {
 
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
-             <div className="absolute inset-0 overflow-hidden">
-               <motion.img
-                  src={scene.imageUrl}
-                  alt="Scene background"
-                  className="w-full h-full object-cover origin-center"
-                  initial={{ scale: 1 }}
-                  whileInView={{ scale: 1.15, x: [-5, 5, -5], y: [-5, 5, -5] }}
-                  transition={{ duration: 40, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+             <div className="absolute inset-0 overflow-hidden bg-black flex items-center justify-center">
+                <Lottie
+                   animationData={i % 2 === 0 ? historyBg1Lottie : historyPlaceholderLottie}
+                   loop={true}
+                   className="absolute min-w-full min-h-full object-cover opacity-60"
+                   style={{ transform: 'scale(1.5)' }}
+                />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-black/20" />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
             <motion.div
-               className="relative z-10 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center"
-               initial={{ y: 50, opacity: 0 }}
-               whileInView={{ y: 0, opacity: 1 }}
-               transition={{ duration: 0.8, delay: 0.2 }}
+               className="relative z-10 p-8 w-full max-w-3xl mx-auto flex flex-col justify-center h-full pb-24 text-center"
+               initial={{ scale: 0.95, opacity: 0 }}
+               whileInView={{ scale: 1, opacity: 1 }}
+               transition={{ duration: 0.8, type: "spring", bounce: 0.4 }}
             >
                {scene.altHistoryText && (
                   <motion.span
@@ -460,20 +469,27 @@ export default function StoryPlayer() {
                     {scene.altHistoryText}
                   </motion.span>
                 )}
-                <p className="text-2xl md:text-4xl font-serif text-white drop-shadow-lg leading-snug">
+                <motion.p
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                  className="text-2xl md:text-4xl font-serif text-white drop-shadow-2xl leading-snug"
+                >
                   {scene.text}
-                </p>
+                </motion.p>
 
                 {scene.choices && i === scenePath.length - 1 && (
                   <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 1 }}
-                    className="mt-8 flex flex-col gap-4"
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.6, duration: 0.6 }}
+                    className="mt-8 flex flex-col gap-4 w-full"
                   >
                     {scene.choices.map((choice) => (
-                      <button
+                      <motion.button
                         key={choice.id}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={() => {
                             handleReadScrollChoice(choice);
                             setTimeout(() => {
@@ -483,8 +499,8 @@ export default function StoryPlayer() {
                         }}
                         className="w-full p-4 bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 rounded-xl hover:bg-zinc-800 transition-colors"
                       >
-                        <p className="text-lg">{choice.text}</p>
-                      </button>
+                        <p className="text-lg text-white font-medium">{choice.text}</p>
+                      </motion.button>
                     ))}
                   </motion.div>
                 )}
