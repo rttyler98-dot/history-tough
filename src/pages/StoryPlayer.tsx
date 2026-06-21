@@ -57,10 +57,13 @@ export default function StoryPlayer() {
   }, [id]);
 
   useEffect(() => {
+    if (!isMuted) {
+      audioManager.playBg();
+    }
     return () => {
       audioManager.stopAll();
     };
-  }, []);
+  }, [isMuted]);
 
   const currentScene = story?.scenes.find(s => s.id === currentSceneId);
 
@@ -70,7 +73,8 @@ export default function StoryPlayer() {
         audioManager.playSceneAudio(currentScene.audioUrl);
       }
     } else {
-      audioManager.stopAll();
+      // Don't stop bg music when changing scenes, just stop scene audio
+      if (!isMuted) audioManager.playBg();
     }
   }, [currentScene, isMuted]);
 
@@ -131,7 +135,8 @@ export default function StoryPlayer() {
     if (isMuted) {
       audioManager.unmute();
       setIsMuted(false);
-      if (currentScene.audioUrl) {
+      audioManager.playBg();
+      if (currentScene?.audioUrl) {
          audioManager.playSceneAudio(currentScene.audioUrl);
       }
     } else {
@@ -280,7 +285,7 @@ export default function StoryPlayer() {
       {mode === 'read' && (
         <div className="flex-1 overflow-y-auto bg-zinc-950 px-4 py-24">
           <div className="max-w-2xl mx-auto space-y-16">
-            {story.scenes.map((scene, index) => (
+            {(scenePath.length > 0 ? scenePath : (currentScene ? [currentScene] : [])).map((scene, index) => (
               <motion.div
                 key={scene.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -314,7 +319,7 @@ export default function StoryPlayer() {
                   {scene.text.slice(1)}
                 </p>
 
-                {scene.choices && scene.choices.length > 0 && index === story.scenes.length - 1 && (
+                {scene.choices && scene.choices.length > 0 && index === (scenePath.length > 0 ? scenePath.length : 1) - 1 && (
                   <div className="mt-12 p-8 bg-zinc-900/50 rounded-2xl border border-zinc-800">
                     <h3 className="text-xl font-bold mb-6 text-center text-amber-500">How will you shape history?</h3>
                     <div className="grid gap-4">
