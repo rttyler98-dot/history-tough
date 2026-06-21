@@ -3,14 +3,16 @@ export type Mode = 'scroll' | 'read' | 'story';
 export interface Choice {
   id: string;
   text: string;
-  isHistorical: boolean;
+  isHistorical?: boolean;
   nextSceneId: string;
+  isPremium?: boolean;
 }
 
 export interface Scene {
   id: string;
   text: string;
   imageUrl: string;
+  audioUrl?: string;
   isCliffhanger?: boolean;
   choices?: Choice[];
   altHistoryText?: string;
