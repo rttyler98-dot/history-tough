@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Play, Info } from 'lucide-react';
 import Lottie from 'lottie-react';
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const LottieComponent = (Lottie as any).default || Lottie;
 import { motion } from 'framer-motion';
 import loadingAnimation from '../assets/lottie/loading.json';
@@ -54,14 +55,22 @@ export default function Home() {
 
       {/* Hero Section */}
       <div className="relative h-[85vh] w-full overflow-hidden bg-zinc-900">
-        <div className="absolute inset-0 bg-gradient-to-br from-amber-900/30 via-zinc-900 to-zinc-950">
+        <div className="absolute inset-0 overflow-hidden">
+          {/* Animated procedural background matching the theme */}
+          <motion.div
+            initial={{ opacity: 0.8 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
+            className="absolute inset-0 bg-gradient-to-br from-red-900/40 via-black to-amber-900/20"
+          />
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-amber-900/20 via-zinc-900/80 to-black" />
           <motion.img
             initial={{ scale: 1.05 }}
             animate={{ scale: 1.1 }}
             transition={{ duration: 10, repeat: Infinity, repeatType: 'reverse' }}
             src={featuredStory.thumbnailUrl}
             alt={featuredStory.title}
-            className="w-full h-full object-cover opacity-60"
+            className="w-full h-full object-cover opacity-40 mix-blend-luminosity"
             onError={(e) => {
               e.currentTarget.style.opacity = '0';
             }}

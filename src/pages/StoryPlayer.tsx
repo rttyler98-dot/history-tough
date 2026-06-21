@@ -6,10 +6,26 @@ import type { Choice, Scene, Story } from '../types';
 import { audioManager } from '../lib/audio';
 import { Volume2, VolumeX } from 'lucide-react';
 import Lottie from 'lottie-react';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const LottieComponent = (Lottie as any).default || Lottie;
 
 import loadingAnimation from '../assets/lottie/loading.json';
 import accentAnimation from '../assets/lottie/accent.json';
+import DynamicSceneBackground from '../components/DynamicSceneBackground';
+
+// Dynamic imports for Lottie JSONs
+import senatorLottie from '../assets/lottie/senator.json';
+import sleepLottie from '../assets/lottie/sleep.json';
+import daggerLottie from '../assets/lottie/dagger.json';
+import crownLottie from '../assets/lottie/crown.json';
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const lottieAssets: Record<string, any> = {
+  senator: senatorLottie,
+  sleep: sleepLottie,
+  dagger: daggerLottie,
+  crown: crownLottie,
+};
 
 export default function StoryPlayer() {
   const { id } = useParams();
@@ -60,9 +76,10 @@ export default function StoryPlayer() {
 
   useEffect(() => {
     if (mode === 'scroll' && story && scenePath.length === 0 && currentScene) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setScenePath([currentScene]);
     }
-  }, [mode, story, currentScene]);
+  }, [mode, story, currentScene, scenePath.length]);
 
 
   if (loading) {
@@ -190,19 +207,29 @@ export default function StoryPlayer() {
               <div className="w-2/3 h-full cursor-pointer pointer-events-auto" onClick={handleNext} />
             </div>
 
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-900/20 via-zinc-900 to-zinc-950">
-              <motion.img
-                key={currentScene.id}
-                src={currentScene.imageUrl}
-                alt="Scene background"
-                className="w-full h-full object-cover origin-center opacity-80"
-                initial={{ scale: 1.05 }}
-                animate={{ scale: 1.2, x: [0, -10, 10, 0], y: [0, 10, -10, 0] }}
-                transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-                onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+            <div className="absolute inset-0">
+              <DynamicSceneBackground theme={currentScene.theme} />
+              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent pointer-events-none" />
             </div>
+
+            <AnimatePresence mode="wait">
+              {currentScene.lottieAsset && lottieAssets[currentScene.lottieAsset] && (
+                <motion.div
+                  key={`lottie-${currentScene.id}`}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 1.2 }}
+                  transition={{ duration: 0.8 }}
+                  className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+                >
+                  <LottieComponent
+                     animationData={lottieAssets[currentScene.lottieAsset]}
+                     loop={true}
+                     className="w-[500px] h-[500px] opacity-80 mix-blend-screen"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-20 pointer-events-none mix-blend-screen z-0">
                 <LottieComponent animationData={accentAnimation} loop={true} />
@@ -261,14 +288,18 @@ export default function StoryPlayer() {
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.6 }}
               >
-                <motion.img
-                  src={scene.imageUrl}
-                  alt="Historical depiction"
-                  className="w-full rounded-2xl shadow-xl mb-8 object-cover aspect-video bg-zinc-800"
-                  whileHover={{ scale: 1.02 }}
-                  transition={{ type: "spring", stiffness: 300 }}
-                  onError={(e) => { e.currentTarget.style.display = 'none'; }}
-                />
+                <div className="w-full rounded-2xl shadow-xl mb-8 overflow-hidden relative aspect-video bg-zinc-800">
+                  <DynamicSceneBackground theme={scene.theme} />
+                  {scene.lottieAsset && lottieAssets[scene.lottieAsset] && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                       <LottieComponent
+                         animationData={lottieAssets[scene.lottieAsset]}
+                         loop={true}
+                         className="w-48 h-48 opacity-80 mix-blend-screen"
+                      />
+                    </div>
+                  )}
+                </div>
 
                 {scene.altHistoryText && (
                   <div className="mb-6 inline-block bg-amber-900/30 text-amber-500 px-4 py-1 rounded-full text-sm font-bold tracking-wider">
@@ -311,16 +342,18 @@ export default function StoryPlayer() {
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden bg-zinc-900">
              <div className="absolute inset-0 overflow-hidden">
-               <motion.img
-                  src={scene.imageUrl}
-                  alt="Scene background"
-                  className="w-full h-full object-cover origin-center opacity-80"
-                  initial={{ scale: 1 }}
-                  whileInView={{ scale: 1.15, x: [-5, 5, -5], y: [-5, 5, -5] }}
-                  transition={{ duration: 40, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-                  onError={(e) => { e.currentTarget.style.opacity = '0'; }}
-               />
+               <DynamicSceneBackground theme={scene.theme} />
               <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+
+              {scene.lottieAsset && lottieAssets[scene.lottieAsset] && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
+                  <LottieComponent
+                     animationData={lottieAssets[scene.lottieAsset]}
+                     loop={true}
+                     className="w-[600px] h-[600px] opacity-70 mix-blend-screen"
+                  />
+                </div>
+              )}
             </div>
 
             <div className="relative z-10 w-full max-w-4xl mx-auto px-4 md:px-12 pointer-events-none">

@@ -11,7 +11,9 @@ export interface Choice {
 export interface Scene {
   id: string;
   text: string;
-  imageUrl: string;
+  imageUrl?: string;
+  theme?: 'senate' | 'bedroom' | 'betrayal' | 'triumph' | 'egypt' | 'sparta';
+  lottieAsset?: string;
   audioUrl?: string;
   isCliffhanger?: boolean;
   choices?: Choice[];

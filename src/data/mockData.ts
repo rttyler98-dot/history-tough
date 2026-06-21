@@ -10,13 +10,15 @@ export const mockStories: Story[] = [
     scenes: [
       {
         id: 'scene-1',
-        text: 'Rome, 44 BC. You are Julius Caesar, Dictator in Perpetuity. The people cheer your name, but whispers echo in the marble halls of the Senate.',
-        imageUrl: 'https://images.unsplash.com/photo-1622359487965-da255b719ee2?auto=format&fit=crop&q=80&w=1080&h=1920',
+        text: 'Rome, 44 BC. The air in the Senate is thick with unspoken tension. You are Julius Caesar, Dictator in Perpetuity. As you walk the marble halls, the silence is deafening.',
+        theme: 'senate',
+        lottieAsset: 'senator',
       },
       {
         id: 'scene-2',
-        text: 'Your wife Calpurnia wakes up screaming. "I saw your statue pouring blood!" she cries. "Do not go to the Senate today!"',
-        imageUrl: 'https://images.unsplash.com/photo-1555581977-1c607ab18c94?auto=format&fit=crop&q=80&w=1080&h=1920',
+        text: 'The night before the Ides. Calpurnia jolts awake, breathless. "I saw your statue pouring blood!" she cries, clutching your arm. "Do not go to the Senate today!"',
+        theme: 'bedroom',
+        lottieAsset: 'sleep',
         choices: [
           {
             id: 'go-senate',
@@ -34,21 +36,24 @@ export const mockStories: Story[] = [
       },
       {
         id: 'scene-3-historical',
-        text: 'You arrive at the Theatre of Pompey. The senators surround you. Casca grabs your toga. "Vile Casca, what are you doing?!"',
-        imageUrl: 'https://images.unsplash.com/photo-1599813247050-8b1e16f39eec?auto=format&fit=crop&q=80&w=1080&h=1920',
+        text: 'The Theatre of Pompey. The senators crowd around you, their faces unreadable. Suddenly, Casca grabs your toga. The trap is sprung.',
+        theme: 'senate',
+        lottieAsset: 'senator',
         isCliffhanger: true,
       },
       {
         id: 'scene-4-historical',
-        text: 'Blades flash. Even Brutus, your trusted friend, strikes. "Et tu, Brute?" You cover your face with your toga and fall.',
-        imageUrl: 'https://images.unsplash.com/photo-1605330384877-03306ce08eeb?auto=format&fit=crop&q=80&w=1080&h=1920',
+        text: 'Steel flashes in the dim light. You look up, bleeding, and see Brutus raising his blade. "Et tu, Brute?" You pull your toga over your face and welcome the dark.',
+        theme: 'betrayal',
+        lottieAsset: 'dagger',
         isEnding: true,
       },
       {
         id: 'scene-3-alt',
         altHistoryText: 'Alternate History unlocked!',
-        text: 'You stay home. The conspirators wait for hours, growing panicked. Antony discovers the plot and arrests Brutus and Cassius.',
-        imageUrl: 'https://images.unsplash.com/photo-1582266858167-932d201201ce?auto=format&fit=crop&q=80&w=1080&h=1920',
+        text: 'You heed Calpurnia\'s warning. In the Senate, the conspirators sweat as hours pass. Antony uncovers the plot, and the treason is met with swift, brutal justice. Rome is yours, forever.',
+        theme: 'triumph',
+        lottieAsset: 'crown',
         isEnding: true,
       }
     ]
