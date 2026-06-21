@@ -155,6 +155,12 @@ export default function StoryPlayer() {
 
           <div className="bg-black/50 backdrop-blur-sm rounded-full p-1 flex gap-1 border border-white/10">
             <button
+              className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${mode === 'story' ? 'bg-white/20' : 'hover:bg-white/10'}`}
+              onClick={() => setMode('story')}
+            >
+              Story Mode
+            </button>
+            <button
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${mode === 'scroll' ? 'bg-white/20' : 'hover:bg-white/10'}`}
               onClick={() => setMode('scroll')}
             >
