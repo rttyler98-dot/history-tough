@@ -88,14 +88,27 @@ export default function StoryPlayer() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-zinc-950 text-white">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-rome-dark text-white">
         <LottieComponent animationData={loadingAnimation} loop={true} className="w-48 h-48 mb-4" />
-        <p className="text-xl font-bold tracking-widest text-zinc-400">LOADING HISTORY...</p>
+        <p className="text-xl font-serif font-bold tracking-widest text-rome-gold animate-pulse">LOADING HISTORY...</p>
       </div>
     );
   }
 
-  if (!story || !currentScene) return null;
+  if (!story || !currentScene) return (
+    <div className="min-h-screen bg-rome-900 text-rome-100 flex items-center justify-center p-8">
+      <div className="max-w-md text-center bg-zinc-950/80 p-10 rounded-2xl border border-rome-800 shadow-2xl backdrop-blur-sm">
+        <h2 className="text-4xl font-playfair mb-4 text-rome-400">Story Unavailable</h2>
+        <p className="text-rome-200 mb-8 font-inter text-lg">We couldn't locate this chapter in our archives. The path may have changed or the story might not exist.</p>
+        <button
+          onClick={() => navigate('/')}
+          className="px-6 py-3 bg-rome-700 hover:bg-rome-600 text-white rounded-lg font-inter font-medium transition-colors"
+        >
+          Return to Library
+        </button>
+      </div>
+    </div>
+  );
 
   const handleChoice = (choice: Choice) => {
     if (choice.isPremium) {
@@ -157,8 +170,8 @@ export default function StoryPlayer() {
               return (
                 <div
                   key={s.id}
-                  className={`h-1 w-8 rounded-full transition-all duration-500 ${
-                    isActive ? 'bg-amber-500 scale-110' :
+                  className={`h-1 w-8 rounded-full transition-all duration-500 shadow-sm ${
+                    isActive ? 'bg-rome-gold shadow-[0_0_8px_rgba(194,155,78,0.8)] scale-110' :
                     isPast ? 'bg-white/50' : 'bg-white/20'
                   }`}
                 />
@@ -248,29 +261,31 @@ export default function StoryPlayer() {
                 exit={{ opacity: 0, y: -20 }}
                 className="relative z-20 pb-24 px-4 md:px-12 max-w-4xl mx-auto w-full pointer-events-none"
               >
-                <div className="mb-8 p-6 bg-black/40 backdrop-blur-md rounded-2xl border-l-4 border-amber-600 shadow-2xl">
-                  <p className="text-2xl md:text-4xl font-serif leading-relaxed drop-shadow-lg">
+                <div className="mb-8 p-8 bg-rome-dark/60 backdrop-blur-md rounded-2xl border-t border-b border-rome-gold/30 shadow-2xl relative overflow-hidden">
+                  <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rome-gold/50 to-transparent" />
+                  <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rome-gold/50 to-transparent" />
+                  <p className="text-2xl md:text-4xl font-serif leading-relaxed drop-shadow-2xl text-white font-medium text-center">
                     {currentScene.text}
                   </p>
                 </div>
 
                 {currentScene.choices && currentScene.choices.length > 0 && (
-                  <div className="grid gap-4 pointer-events-auto">
+                  <div className="grid gap-4 pointer-events-auto max-w-2xl mx-auto">
                     {currentScene.choices.map((choice) => (
                       <button
                         key={choice.id}
                         onClick={() => handleChoice(choice)}
-                        className="group relative overflow-hidden bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 hover:border-amber-500 p-4 rounded-xl text-left transition-all hover:scale-[1.02] shadow-xl"
+                        className="group relative overflow-hidden bg-rome-dark/80 backdrop-blur-sm border border-rome-gold/20 hover:border-rome-gold/80 p-5 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-[0_0_20px_rgba(194,155,78,0.2)]"
                       >
-                        <div className="absolute inset-0 bg-gradient-to-r from-amber-600/0 via-amber-600/0 to-amber-600/0 group-hover:from-amber-600/20 group-hover:to-transparent transition-all duration-500" />
+                        <div className="absolute inset-0 bg-gradient-to-r from-rome-gold/0 via-rome-gold/0 to-rome-gold/0 group-hover:from-rome-gold/10 group-hover:to-transparent transition-all duration-500" />
                         <div className="relative flex justify-between items-center z-10">
-                          <span className="text-lg md:text-xl font-medium group-hover:text-amber-400 transition-colors">
+                          <span className="text-lg md:text-xl font-serif font-medium text-gray-200 group-hover:text-rome-gold transition-colors">
                             {choice.text}
                           </span>
                           {choice.isPremium ? (
-                            <Lock className="text-amber-500" size={20} />
+                            <Lock className="text-rome-gold" size={20} />
                           ) : (
-                            <PlayCircle className="text-zinc-500 group-hover:text-amber-500 transition-colors" size={20} />
+                            <PlayCircle className="text-gray-400 group-hover:text-rome-gold transition-colors" size={24} />
                           )}
                         </div>
                       </button>
@@ -283,17 +298,17 @@ export default function StoryPlayer() {
       )}
 
       {mode === 'read' && (
-        <div className="flex-1 overflow-y-auto bg-zinc-950 px-4 py-24">
-          <div className="max-w-2xl mx-auto space-y-16">
+        <div className="flex-1 overflow-y-auto bg-rome-dark px-4 py-24">
+          <div className="max-w-3xl mx-auto space-y-24">
             {(scenePath.length > 0 ? scenePath : (currentScene ? [currentScene] : [])).map((scene, index) => (
               <motion.div
                 key={scene.id}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-100px" }}
-                transition={{ duration: 0.6 }}
+                transition={{ duration: 0.8 }}
               >
-                <div className="w-full rounded-2xl shadow-xl mb-8 overflow-hidden relative aspect-video bg-zinc-800">
+                <div className="w-full rounded-2xl shadow-2xl mb-12 overflow-hidden relative aspect-[21/9] bg-rome-dark border border-rome-gold/20">
                   <DynamicSceneBackground theme={scene.theme} />
                   {scene.lottieAsset && lottieAssets[scene.lottieAsset] && (
                     <div className="absolute inset-0 flex items-center justify-center">
@@ -304,33 +319,42 @@ export default function StoryPlayer() {
                       />
                     </div>
                   )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-rome-dark via-transparent to-transparent opacity-80" />
                 </div>
 
                 {scene.altHistoryText && (
-                  <div className="mb-6 inline-block bg-amber-900/30 text-amber-500 px-4 py-1 rounded-full text-sm font-bold tracking-wider">
-                    ALTERNATE HISTORY PATH
+                  <div className="mb-8 inline-flex items-center justify-center w-full">
+                    <div className="bg-rome-accent/20 border border-rome-accent/50 text-rome-gold px-6 py-2 rounded-full text-xs font-bold tracking-[0.2em] uppercase shadow-[0_0_15px_rgba(122,34,20,0.3)]">
+                      Alternate History Path
+                    </div>
                   </div>
                 )}
 
-                <p className="text-xl md:text-2xl font-serif leading-relaxed text-zinc-300">
-                  <span className="text-4xl text-amber-500 font-bold float-left mr-2 leading-none mt-1">
-                    {scene.text.charAt(0)}
-                  </span>
-                  {scene.text.slice(1)}
-                </p>
+                <div className="px-4 md:px-12">
+                  <p className="text-xl md:text-2xl font-serif leading-loose text-gray-300">
+                    <span className="text-6xl text-rome-gold font-serif font-bold float-left mr-4 leading-none mt-2 drop-shadow-md">
+                      {scene.text.charAt(0)}
+                    </span>
+                    {scene.text.slice(1)}
+                  </p>
+                </div>
 
                 {scene.choices && scene.choices.length > 0 && index === (scenePath.length > 0 ? scenePath.length : 1) - 1 && (
-                  <div className="mt-12 p-8 bg-zinc-900/50 rounded-2xl border border-zinc-800">
-                    <h3 className="text-xl font-bold mb-6 text-center text-amber-500">How will you shape history?</h3>
-                    <div className="grid gap-4">
+                  <div className="mt-16 p-8 bg-black/40 backdrop-blur-sm rounded-2xl border border-rome-gold/20 shadow-2xl">
+                    <div className="flex items-center justify-center mb-8">
+                      <div className="h-[1px] flex-1 bg-gradient-to-r from-transparent to-rome-gold/50" />
+                      <h3 className="text-2xl font-serif italic mx-6 text-rome-gold">How will you shape history?</h3>
+                      <div className="h-[1px] flex-1 bg-gradient-to-l from-transparent to-rome-gold/50" />
+                    </div>
+                    <div className="grid gap-4 max-w-xl mx-auto">
                       {scene.choices.map((choice) => (
                         <button
                           key={choice.id}
                           onClick={() => handleChoice(choice)}
-                          className="flex justify-between items-center bg-zinc-800 hover:bg-zinc-700 p-4 rounded-xl transition-colors"
+                          className="group flex justify-between items-center bg-rome-dark/60 hover:bg-rome-dark border border-rome-gold/10 hover:border-rome-gold/50 p-5 rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_4px_15px_rgba(194,155,78,0.15)]"
                         >
-                          <span className="text-lg">{choice.text}</span>
-                          {choice.isPremium ? <Lock size={20} className="text-amber-500" /> : <PlayCircle size={20} />}
+                          <span className="text-lg font-serif text-gray-200 group-hover:text-rome-gold transition-colors">{choice.text}</span>
+                          {choice.isPremium ? <Lock size={20} className="text-rome-gold" /> : <PlayCircle size={24} className="text-gray-500 group-hover:text-rome-gold transition-colors" />}
                         </button>
                       ))}
                     </div>
@@ -343,12 +367,12 @@ export default function StoryPlayer() {
       )}
 
       {mode === 'scroll' && (
-        <div className="flex-1 overflow-y-auto snap-y snap-mandatory bg-black">
+        <div className="flex-1 overflow-y-auto snap-y snap-mandatory bg-rome-dark">
         {scenePath.map((scene, i) => (
-          <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden bg-zinc-900">
+          <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden bg-rome-dark">
              <div className="absolute inset-0 overflow-hidden">
                <DynamicSceneBackground theme={scene.theme} />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+              <div className="absolute inset-0 bg-gradient-to-t from-rome-dark via-rome-dark/50 to-transparent" />
 
               {scene.lottieAsset && lottieAssets[scene.lottieAsset] && (
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0">
@@ -368,8 +392,10 @@ export default function StoryPlayer() {
                    transition={{ duration: 0.8, delay: 0.2 }}
                    viewport={{ once: false, amount: 0.8 }}
                 >
-                  <div className="mb-8 p-6 bg-black/40 backdrop-blur-md rounded-2xl border-l-4 border-amber-600 shadow-2xl">
-                    <p className="text-2xl md:text-5xl font-serif leading-relaxed drop-shadow-2xl font-bold">
+                  <div className="mb-12 p-8 bg-rome-dark/40 backdrop-blur-md rounded-2xl border-t border-b border-rome-gold/30 shadow-2xl relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rome-gold/50 to-transparent" />
+                    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-rome-gold/50 to-transparent" />
+                    <p className="text-3xl md:text-5xl font-serif leading-relaxed drop-shadow-2xl font-medium text-center text-white">
                       {scene.text}
                     </p>
                   </div>
@@ -377,7 +403,7 @@ export default function StoryPlayer() {
 
                 {scene.choices && scene.choices.length > 0 && (
                    <motion.div
-                     className="grid gap-4 pointer-events-auto"
+                     className="grid gap-4 pointer-events-auto max-w-2xl mx-auto"
                      initial={{ opacity: 0 }}
                      whileInView={{ opacity: 1 }}
                      transition={{ delay: 1 }}
@@ -386,17 +412,17 @@ export default function StoryPlayer() {
                       <button
                         key={choice.id}
                         onClick={() => handleChoice(choice)}
-                        className="group relative overflow-hidden bg-zinc-900/80 backdrop-blur-sm border border-zinc-700 hover:border-amber-500 p-4 rounded-xl text-left transition-all hover:scale-[1.02] shadow-xl"
+                        className="group relative overflow-hidden bg-rome-dark/80 backdrop-blur-sm border border-rome-gold/20 hover:border-rome-gold/80 p-5 rounded-xl text-left transition-all duration-300 hover:scale-[1.02] shadow-xl hover:shadow-[0_0_20px_rgba(194,155,78,0.2)]"
                       >
-                         <div className="absolute inset-0 bg-gradient-to-r from-amber-600/0 via-amber-600/0 to-amber-600/0 group-hover:from-amber-600/20 group-hover:to-transparent transition-all duration-500" />
+                         <div className="absolute inset-0 bg-gradient-to-r from-rome-gold/0 via-rome-gold/0 to-rome-gold/0 group-hover:from-rome-gold/10 group-hover:to-transparent transition-all duration-500" />
                          <div className="relative flex justify-between items-center z-10">
-                           <span className="text-lg md:text-xl font-medium group-hover:text-amber-400 transition-colors">
+                           <span className="text-lg md:text-xl font-serif font-medium text-gray-200 group-hover:text-rome-gold transition-colors">
                              {choice.text}
                            </span>
                            {choice.isPremium ? (
-                             <Lock className="text-amber-500" size={20} />
+                             <Lock className="text-rome-gold" size={20} />
                            ) : (
-                             <PlayCircle className="text-zinc-500 group-hover:text-amber-500 transition-colors" size={20} />
+                             <PlayCircle className="text-gray-400 group-hover:text-rome-gold transition-colors" size={24} />
                            )}
                          </div>
                       </button>
@@ -411,29 +437,30 @@ export default function StoryPlayer() {
 
       {/* Paywall Overlay */}
       {showPaywall && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-rome-dark/90 backdrop-blur-md">
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl max-w-md w-full shadow-2xl relative"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="bg-black/80 border border-rome-gold/30 p-10 rounded-2xl max-w-md w-full shadow-[0_0_40px_rgba(194,155,78,0.15)] relative overflow-hidden"
           >
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-rome-gold to-transparent" />
             <button
               onClick={() => setShowPaywall(false)}
-              className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+              className="absolute top-4 right-4 text-gray-500 hover:text-white transition-colors"
             >
               <X size={24} />
             </button>
-            <div className="w-16 h-16 bg-amber-500/10 rounded-full flex items-center justify-center mb-6 mx-auto">
-              <Lock className="text-amber-500" size={32} />
+            <div className="w-20 h-20 bg-rome-gold/10 rounded-full flex items-center justify-center mb-6 mx-auto border border-rome-gold/20 shadow-[0_0_15px_rgba(194,155,78,0.2)]">
+              <Lock className="text-rome-gold" size={36} />
             </div>
-            <h3 className="text-2xl font-bold text-center mb-2 font-serif text-white">Unlock History</h3>
-            <p className="text-zinc-400 text-center mb-8">
+            <h3 className="text-3xl font-serif text-center mb-3 text-white">Unlock History</h3>
+            <p className="text-gray-400 text-center mb-8 leading-relaxed">
               Discover alternate timelines and premium historical content with a Historia subscription.
             </p>
-            <button className="w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-4 rounded-xl transition-colors mb-4">
+            <button className="w-full bg-gradient-to-r from-rome-gold to-yellow-600 hover:from-yellow-500 hover:to-yellow-400 text-rome-dark font-bold py-4 rounded-xl transition-all duration-300 shadow-[0_0_15px_rgba(194,155,78,0.4)] hover:shadow-[0_0_25px_rgba(194,155,78,0.6)] transform hover:-translate-y-0.5">
               Subscribe Now
             </button>
-            <p className="text-xs text-center text-zinc-500">
+            <p className="text-xs text-center text-gray-500 mt-4">
               Cancel anytime. Terms and conditions apply.
             </p>
           </motion.div>
