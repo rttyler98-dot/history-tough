@@ -1,4 +1,4 @@
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
 
 // Using free/placeholder audio URLs for the prototype
 const sounds = {
@@ -17,6 +17,8 @@ const sounds = {
   })
 };
 
+let currentSceneAudio: Howl | null = null;
+
 export const audioManager = {
   playBg: () => {
     if (!sounds.bgMusic.playing()) sounds.bgMusic.play();
@@ -24,4 +26,20 @@ export const audioManager = {
   stopBg: () => sounds.bgMusic.stop(),
   playClick: () => sounds.click.play(),
   playDramaticHit: () => sounds.dramaticHit.play(),
+  playSceneAudio: (url: string) => {
+    if (currentSceneAudio) {
+      currentSceneAudio.stop();
+    }
+    currentSceneAudio = new Howl({ src: [url], volume: 0.5 });
+    currentSceneAudio.play();
+  },
+  stopAll: () => {
+    Howler.stop();
+  },
+  mute: () => {
+    Howler.mute(true);
+  },
+  unmute: () => {
+    Howler.mute(false);
+  }
 };

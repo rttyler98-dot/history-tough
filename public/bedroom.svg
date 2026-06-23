@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1920" height="1080" viewBox="0 0 1920 1080" xmlns="http://www.w3.org/2000/svg">
+
+    <!-- Background (Night) -->
+    <rect width="1920" height="1080" fill="#1a1a2e" />
+
+    <!-- Window -->
+    <rect x="1300" y="100" width="400" height="500" fill="#0f0f1a" stroke="#8a7c64" stroke-width="15" />
+    <circle cx="1500" cy="250" r="80" fill="#e0e0e0" /> <!-- Moon -->
+
+    <!-- Floor -->
+    <rect x="0" y="850" width="1920" height="230" fill="#302b23" />
+
+    <!-- Bed -->
+    <rect x="300" y="650" width="700" height="200" fill="#523924" stroke="#000000" stroke-width="8" />
+    <!-- Pillow -->
+    <rect x="350" y="600" width="150" height="70" rx="20" fill="#ffffff" stroke="#000000" stroke-width="6" />
+
+    <!-- Sleeping Caesar -->
+    <g transform="translate(425, 620)">
+        <!-- Head -->
+        <circle cx="0" cy="0" r="45" fill="#ffdfc4" stroke="#000000" stroke-width="8" />
+        <!-- Eyes (Closed) -->
+        <path d="M -20,-5 Q -10,-10 0,-5" fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+        <path d="M 10,-5 Q 20,-10 30,-5" fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+        <!-- Mouth -->
+        <circle cx="5" cy="20" r="8" fill="#000000" /> <!-- Snoring -->
+        <!-- Zzz -->
+        <text x="30" y="-40" font-family="Arial" font-size="40" font-weight="bold" fill="#ffffff">Z</text>
+        <text x="60" y="-70" font-family="Arial" font-size="30" font-weight="bold" fill="#ffffff">z</text>
+    </g>
+
+    <!-- Blanket -->
+    <path d="M 400,650 Q 600,620 900,650 L 1000,850 L 300,850 Z" fill="#8c1c1c" stroke="#000000" stroke-width="8" />
+
+    <!-- Calpurnia (Worried) -->
+    <g transform="translate(1100, 550)">
+        <!-- Body / Dress -->
+        <path d="M -50,300 C -40,150 -10,70 0,70 C 10,70 40,150 50,300 Z" fill="#d4c3b0" stroke="#000000" stroke-width="8" />
+        <!-- Head -->
+        <circle cx="0" cy="20" r="45" fill="#ffdfc4" stroke="#000000" stroke-width="8" />
+        <!-- Hair -->
+        <path d="M -45,20 C -45,-30 45,-30 45,20 C 55,50 60,100 50,150 C -50,150 -55,50 -45,20 Z" fill="#4a3018" stroke="#000000" stroke-width="6" />
+        <!-- Face re-fill (to cover hair over face) -->
+        <circle cx="0" cy="20" r="45" fill="#ffdfc4" stroke="#000000" stroke-width="8" />
+        <!-- Hair top part -->
+        <path d="M -45,20 C -45,-30 45,-30 45,20" fill="#4a3018" stroke="#000000" stroke-width="8" />
+        <!-- Eyes (Worried) -->
+        <circle cx="-15" cy="15" r="5" fill="#000000" />
+        <circle cx="15" cy="15" r="5" fill="#000000" />
+        <!-- Eyebrows -->
+        <path d="M -25,5 L -5,10" fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+        <path d="M 25,5 L 5,10" fill="none" stroke="#000000" stroke-width="4" stroke-linecap="round" />
+        <!-- Mouth -->
+        <circle cx="0" cy="35" r="6" fill="#000000" />
+        <!-- Hands/Arms gesturing -->
+        <path d="M -30,120 Q -80,100 -70,50" fill="none" stroke="#000000" stroke-width="8" stroke-linecap="round" />
+        <path d="M 30,120 Q 80,100 70,50" fill="none" stroke="#000000" stroke-width="8" stroke-linecap="round" />
+    </g>
+
+</svg>
