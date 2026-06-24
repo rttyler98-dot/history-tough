@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100%" height="100%">
+  <!-- Body -->
+  <path d="M 30 100 L 30 70 Q 30 40 50 40 Q 70 40 70 70 L 70 100 Z" fill="#fff" />
+  <path d="M 30 100 L 30 70 Q 30 40 50 40 Q 70 40 70 70 L 70 100 Z" fill="rgba(0,0,0,0.1)" clip-path="polygon(50% 0, 100% 0, 100% 100%, 50% 100%)" />
+
+  <!-- Purple stripe (Senator) -->
+  <path d="M 60 50 L 60 100 L 65 100 L 65 50 Z" fill="#800080" />
+
+  <!-- Head -->
+  <circle cx="50" cy="30" r="18" fill="#f4d0a3" />
+
+  <!-- Hair (graying) -->
+  <path d="M 32 30 Q 32 12 50 12 Q 68 12 68 30 Q 50 20 32 30 Z" fill="#888" />
+
+  <!-- Eyes -->
+  <circle cx="43" cy="28" r="2.5" fill="#000" />
+  <circle cx="57" cy="28" r="2.5" fill="#000" />
+
+  <!-- Expression (Surprised/Neutral) -->
+  <circle cx="50" cy="37" r="3" fill="#000" />
+</svg>

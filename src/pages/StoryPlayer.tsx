@@ -5,6 +5,114 @@ import { motion, AnimatePresence } from 'framer-motion';
 import type { Choice, Scene, Story } from '../types';
 import { audioManager } from '../lib/audio';
 import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+import Lottie from 'lottie-react';
+
+const SimpleHistoryBackground = ({ bgClass, locationType }: { bgClass?: string, locationType?: 'city' | 'village' | 'indoor' | 'nature' }) => {
+  // Extract primary color theme to determine scene elements
+  const isNight = bgClass?.includes('indigo') || bgClass?.includes('slate');
+  const isSunset = bgClass?.includes('amber') || bgClass?.includes('orange');
+  const isBlood = bgClass?.includes('red');
+  const isIndoor = locationType === 'indoor' || bgClass?.includes('stone') || bgClass?.includes('neutral');
+
+  return (
+    <div className={`absolute inset-0 overflow-hidden ${bgClass || 'bg-blue-300'}`}>
+      {/* Sky elements */}
+      {!isIndoor && (
+        <>
+          <motion.div
+            className={`absolute rounded-full ${isNight ? 'bg-zinc-100 w-24 h-24 right-1/4' : 'bg-yellow-300 w-32 h-32 right-1/3'}`}
+            initial={{ top: '60%', opacity: 0 }}
+            animate={{ top: isNight ? '15%' : isSunset ? '40%' : '10%', opacity: 1 }}
+            transition={{ duration: 2, ease: "easeOut" }}
+          />
+          {/* Clouds */}
+          <motion.div
+            className="absolute top-20 flex gap-4 opacity-50"
+            animate={{ x: [0, -1000] }}
+            transition={{ duration: 120, repeat: Infinity, ease: "linear" }}
+          >
+            {[...Array(5)].map((_, i) => {
+              // Deterministic width based on index instead of Math.random
+              const width = 100 + ((i * 37) % 100);
+              return (
+                <div key={i} className={`bg-white rounded-full ${isNight ? 'opacity-20' : 'opacity-80'}`} style={{ width, height: 40, marginLeft: 200 * i, marginTop: (i%3)*20 }} />
+              );
+            })}
+          </motion.div>
+        </>
+      )}
+
+      {/* Landscape/Hills, Indoor Pillars, City Skyline, or Village */}
+      {isIndoor ? (
+        <div className="absolute bottom-0 w-full h-full flex justify-around items-end opacity-40">
+           {[...Array(4)].map((_, i) => (
+             <div key={i} className="w-16 h-3/4 bg-zinc-800 border-x-4 border-zinc-900 rounded-t-sm" />
+           ))}
+        </div>
+      ) : locationType === 'city' ? (
+        <div className="absolute bottom-0 w-full h-1/2 flex items-end opacity-60">
+           {[...Array(12)].map((_, i) => {
+               const height = 30 + ((i * 17) % 50);
+               return (
+                   <div key={i} className={`flex-1 bg-zinc-800 border-x border-zinc-900`} style={{ height: `${height}%` }} />
+               )
+           })}
+        </div>
+      ) : locationType === 'village' ? (
+        <div className="absolute bottom-0 w-full h-1/3 flex justify-around items-end opacity-70">
+           {[...Array(5)].map((_, i) => {
+               const height = 40 + ((i * 13) % 40);
+               return (
+                   <div key={i} className="relative w-24 flex flex-col items-center" style={{ height: `${height}%` }}>
+                       {/* Roof */}
+                       <div className="w-0 h-0 border-l-[48px] border-l-transparent border-r-[48px] border-r-transparent border-b-[40px] border-b-amber-800" />
+                       {/* House body */}
+                       <div className="w-20 h-full bg-amber-100 flex justify-center items-end pb-2">
+                           {/* Door */}
+                           <div className="w-6 h-10 bg-amber-900 rounded-t-sm" />
+                       </div>
+                   </div>
+               )
+           })}
+           <motion.div
+             className={`absolute -bottom-10 -left-10 w-[120%] h-1/3 rounded-t-[50%] ${isBlood ? 'bg-red-950' : isNight ? 'bg-indigo-950' : 'bg-emerald-700'} -z-10`}
+           />
+        </div>
+      ) : (
+        <>
+          <motion.div
+            className={`absolute -bottom-10 -left-10 w-[120%] h-1/3 rounded-t-[50%] ${isBlood ? 'bg-red-950' : isNight ? 'bg-indigo-950' : 'bg-emerald-700'}`}
+          />
+          <motion.div
+            className={`absolute -bottom-20 -right-10 w-[120%] h-1/2 rounded-t-[50%] ${isBlood ? 'bg-red-900' : isNight ? 'bg-indigo-900' : 'bg-emerald-600'} opacity-80`}
+          />
+        </>
+      )}
+    </div>
+  );
+};
+
+function LottiePlayer({ url }: { url: string }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [animationData, setAnimationData] = useState<any>(null);
+
+  useEffect(() => {
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => setAnimationData(data))
+      .catch((err) => console.error("Failed to load lottie", err));
+  }, [url]);
+
+  if (!animationData) return null;
+
+  return (
+    <Lottie
+      animationData={animationData}
+      loop={true}
+      className="w-64 h-64 md:w-96 md:h-96"
+    />
+  );
+}
 
 export default function StoryPlayer() {
   const { id } = useParams();
@@ -13,6 +121,7 @@ export default function StoryPlayer() {
   const [loading, setLoading] = useState(true);
 
   const [currentSceneId, setCurrentSceneId] = useState<string | undefined>();
+  const [direction, setDirection] = useState<number>(0);
   const [mode, setMode] = useState<'story' | 'scroll' | 'read'>('story');
   const [showPaywall, setShowPaywall] = useState(false);
   const [isMuted, setIsMuted] = useState(true);
@@ -62,6 +171,7 @@ export default function StoryPlayer() {
 
     // Only rebuild path if it's completely empty (initial load)
     if (scenePath.length === 0) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setScenePath(buildPath());
     }
   }, [story, scenePath.length]);
@@ -151,6 +261,7 @@ export default function StoryPlayer() {
 
     const nextIndex = story.scenes.findIndex(s => s.id === currentSceneId) + 1;
     if (nextIndex < story.scenes.length) {
+      setDirection(1);
       setCurrentSceneId(story.scenes[nextIndex].id);
     }
   };
@@ -160,12 +271,14 @@ export default function StoryPlayer() {
 
     const prevIndex = story.scenes.findIndex(s => s.id === currentSceneId) - 1;
     if (prevIndex >= 0) {
+      setDirection(-1);
       setCurrentSceneId(story.scenes[prevIndex].id);
     }
   };
 
   const handleChoice = (choice: Choice) => {
     if (!isMuted) audioManager.playClick();
+    setDirection(1);
     setCurrentSceneId(choice.nextSceneId);
   };
 
@@ -208,14 +321,34 @@ export default function StoryPlayer() {
         </div>
 
         {/* Scene Content */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={false} custom={direction}>
           <motion.div
             key={currentScene.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.8 }}
-            className="absolute inset-0 overflow-hidden"
+            custom={direction}
+            variants={{
+              enter: (dir: number) => ({
+                x: dir > 0 ? 1000 : -1000,
+                opacity: 0
+              }),
+              center: {
+                zIndex: 1,
+                x: 0,
+                opacity: 1
+              },
+              exit: (dir: number) => ({
+                zIndex: 0,
+                x: dir < 0 ? 1000 : -1000,
+                opacity: 0
+              })
+            }}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{
+              x: { type: "spring", stiffness: 300, damping: 30 },
+              opacity: { duration: 0.2 }
+            }}
+            className="absolute inset-0 overflow-hidden bg-black"
           >
             {/* Click zones for navigation */}
             <div className="absolute inset-0 z-40 flex pointer-events-none">
@@ -224,17 +357,45 @@ export default function StoryPlayer() {
             </div>
 
             <div className="absolute inset-0">
-              <motion.img
-                src={currentScene.imageUrl}
-                alt="Scene background"
-                className="w-full h-full object-cover origin-center"
-                initial={{ scale: 1.05 }}
-                animate={{ scale: 1.2, x: [0, -10, 10, 0], y: [0, 10, -10, 0] }}
-                transition={{ duration: 30, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-black/20" />
+              <SimpleHistoryBackground bgClass={currentScene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} locationType={currentScene.locationType} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
+
+            {/* Character Animation Overlay */}
+            {currentScene.lottieUrl ? (
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+                  <LottiePlayer url={currentScene.lottieUrl} />
+               </div>
+            ) : currentScene.characterUrl && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-40">
+                <motion.img
+                  src={currentScene.characterUrl}
+                  alt="Character"
+                  className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                  initial={
+                    currentScene.animationType === 'slide-in' ? { x: -300, opacity: 0 } :
+                    currentScene.animationType === 'spin' ? { rotate: -180, scale: 0 } :
+                    { opacity: 0 }
+                  }
+                  animate={
+                    currentScene.animationType === 'bob' ? { y: [0, -15, 0], opacity: 1 } :
+                    currentScene.animationType === 'shake' ? { x: [-5, 5, -5, 5, 0], opacity: 1 } :
+                    currentScene.animationType === 'slide-in' ? { x: 0, opacity: 1 } :
+                    currentScene.animationType === 'spin' ? { rotate: 0, scale: 1, opacity: 1 } :
+                    currentScene.animationType === 'pulse' ? { scale: [1, 1.1, 1], opacity: 1 } :
+                    { opacity: 1 }
+                  }
+                  transition={
+                    currentScene.animationType === 'bob' ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } :
+                    currentScene.animationType === 'shake' ? { duration: 0.4, repeat: Infinity } :
+                    currentScene.animationType === 'slide-in' ? { duration: 0.8, type: 'spring', bounce: 0.4 } :
+                    currentScene.animationType === 'spin' ? { duration: 0.6, type: 'spring' } :
+                    currentScene.animationType === 'pulse' ? { duration: 1, repeat: Infinity } :
+                    { duration: 0.5 }
+                  }
+                />
+              </div>
+            )}
 
             <div className="absolute inset-0 z-50 flex flex-col justify-end p-6 pb-24 md:p-12 pointer-events-none">
               <motion.div
@@ -349,13 +510,33 @@ export default function StoryPlayer() {
                 viewport={{ once: true, margin: "-100px" }}
                 transition={{ duration: 0.6 }}
               >
-                <motion.img
-                  src={scene.imageUrl}
-                  alt="Historical depiction"
-                  className="w-full rounded-2xl shadow-xl mb-8 object-cover aspect-video"
+                <motion.div
+                  className={`w-full rounded-2xl shadow-xl mb-8 aspect-video overflow-hidden relative bg-[length:200%_200%] animate-bg-pan ${scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'}`}
                   whileHover={{ scale: 1.02 }}
                   transition={{ type: "spring", stiffness: 300 }}
-                />
+                >
+                  {scene.characterUrl && !scene.lottieUrl && (
+                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                       <motion.img
+                         src={scene.characterUrl}
+                         alt="Character"
+                         className="w-1/2 h-1/2 object-contain"
+                         animate={
+                           scene.animationType === 'bob' ? { y: [0, -10, 0] } :
+                           scene.animationType === 'shake' ? { x: [-3, 3, -3, 3, 0] } :
+                           scene.animationType === 'pulse' ? { scale: [1, 1.05, 1] } :
+                           {}
+                         }
+                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                       />
+                     </div>
+                  )}
+                  {scene.lottieUrl && (
+                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20 scale-[0.6]">
+                        <LottiePlayer url={scene.lottieUrl} />
+                     </div>
+                  )}
+                </motion.div>
 
                 {scene.altHistoryText && (
                   <span className="inline-block bg-purple-100 text-purple-900 text-sm font-bold px-4 py-2 rounded-full mb-6 border border-purple-200">
@@ -432,20 +613,48 @@ export default function StoryPlayer() {
         {scenePath.map((scene, i) => (
           <div key={`${scene.id}-${i}`} id={`scroll-scene-${scene.id}`} className="h-[100dvh] w-full snap-start relative flex items-center justify-center overflow-hidden">
              <div className="absolute inset-0 overflow-hidden">
-               <motion.img
-                  src={scene.imageUrl}
-                  alt="Scene background"
-                  className="w-full h-full object-cover origin-center"
-                  initial={{ scale: 1 }}
-                  whileInView={{ scale: 1.15, x: [-5, 5, -5], y: [-5, 5, -5] }}
-                  transition={{ duration: 40, repeat: Infinity, repeatType: 'reverse', ease: 'linear' }}
-               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-black/30" />
+              <SimpleHistoryBackground bgClass={scene.bgClass || 'bg-gradient-to-tr from-zinc-800 to-zinc-950'} locationType={scene.locationType} />
               <div className="absolute inset-0 particles-overlay opacity-30 pointer-events-none mix-blend-screen" />
             </div>
 
+            {/* Character Animation Overlay for Scroll Mode */}
+            {scene.lottieUrl ? (
+               <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                  <LottiePlayer url={scene.lottieUrl} />
+               </div>
+            ) : scene.characterUrl && (
+              <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                <motion.img
+                  src={scene.characterUrl}
+                  alt="Character"
+                  className="w-48 h-48 md:w-64 md:h-64 object-contain"
+                  initial={
+                    scene.animationType === 'slide-in' ? { x: -300, opacity: 0 } :
+                    scene.animationType === 'spin' ? { rotate: -180, scale: 0 } :
+                    { opacity: 0 }
+                  }
+                  whileInView={
+                    scene.animationType === 'bob' ? { y: [0, -15, 0], opacity: 1 } :
+                    scene.animationType === 'shake' ? { x: [-5, 5, -5, 5, 0], opacity: 1 } :
+                    scene.animationType === 'slide-in' ? { x: 0, opacity: 1 } :
+                    scene.animationType === 'spin' ? { rotate: 0, scale: 1, opacity: 1 } :
+                    scene.animationType === 'pulse' ? { scale: [1, 1.1, 1], opacity: 1 } :
+                    { opacity: 1 }
+                  }
+                  transition={
+                    scene.animationType === 'bob' ? { duration: 2, repeat: Infinity, ease: 'easeInOut' } :
+                    scene.animationType === 'shake' ? { duration: 0.4, repeat: Infinity } :
+                    scene.animationType === 'slide-in' ? { duration: 0.8, type: 'spring', bounce: 0.4 } :
+                    scene.animationType === 'spin' ? { duration: 0.6, type: 'spring' } :
+                    scene.animationType === 'pulse' ? { duration: 1, repeat: Infinity } :
+                    { duration: 0.5 }
+                  }
+                />
+              </div>
+            )}
+
             <motion.div
-               className="relative z-10 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center"
+               className="relative z-30 p-8 w-full max-w-2xl mx-auto flex flex-col justify-end h-full pb-24 text-center pointer-events-none"
                initial={{ y: 50, opacity: 0 }}
                whileInView={{ y: 0, opacity: 1 }}
                transition={{ duration: 0.8, delay: 0.2 }}
@@ -455,7 +664,7 @@ export default function StoryPlayer() {
                     initial={{ scale: 0.8 }}
                     animate={{ scale: [0.8, 1.1, 1] }}
                     transition={{ duration: 0.4 }}
-                    className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 self-center"
+                    className="inline-block bg-purple-600 text-white text-xs font-bold px-3 py-1 rounded-full mb-4 self-center pointer-events-auto"
                   >
                     {scene.altHistoryText}
                   </motion.span>
@@ -469,7 +678,7 @@ export default function StoryPlayer() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 1 }}
-                    className="mt-8 flex flex-col gap-4"
+                    className="mt-8 flex flex-col gap-4 pointer-events-auto"
                   >
                     {scene.choices.map((choice) => (
                       <button
